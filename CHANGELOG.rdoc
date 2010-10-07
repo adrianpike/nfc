@@ -1,3 +1,10 @@
+=== 3.0 / 2010-10-7
+
+* Big changes to work with latest libnfc changes
+
+  * Lots of structs renamed
+  * Only works with ISO14443A tags
+
 === 2.0.1 / 2009-09-19
 
 * 1 Bugfix

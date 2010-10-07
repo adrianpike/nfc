@@ -1,6 +1,5 @@
 #include <nfc_device.h>
 
-static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
 
 /*
  * call-seq:
@@ -10,12 +9,12 @@ static byte_t abtFelica[5] = { 0x00, 0xff, 0xff, 0x00, 0x00 };
  */
 static VALUE connect(VALUE klass)
 {
-  dev_info * dev = nfc_connect();
+  nfc_device_t * dev = nfc_connect(NULL);
   if(!dev)
     rb_raise(rb_eRuntimeError, "could not find NFC device");
 
   if(!nfc_initiator_init(dev))
-    rb_raise(rb_eRuntimeError, "oh snap, could not init");
+    rb_raise(rb_eRuntimeError, "oh snap, could not init NFC device");
 
   return Data_Wrap_Struct(klass, 0, 0, dev);
 }
@@ -28,8 +27,8 @@ static VALUE connect(VALUE klass)
  */
 static VALUE disconnect(VALUE self)
 {
-  dev_info * dev;
-  Data_Get_Struct(self, dev_info, dev);
+  nfc_device_t * dev;
+  Data_Get_Struct(self, nfc_device_t, dev);
   nfc_disconnect(dev);
 
   return self;
@@ -43,12 +42,12 @@ static VALUE disconnect(VALUE self)
  */
 static VALUE configure(VALUE self, VALUE option, VALUE flag)
 {
-  dev_info * dev;
-  Data_Get_Struct(self, dev_info, dev);
+  nfc_device_t * dev;
+  Data_Get_Struct(self, nfc_device_t, dev);
 
   nfc_configure(
     dev,
-    (const dev_config_option)NUM2INT(option),
+    (const nfc_device_option_t)NUM2INT(option),
     (const bool)NUM2INT(flag)
   );
 
@@ -63,17 +62,13 @@ static VALUE configure(VALUE self, VALUE option, VALUE flag)
  */
 static VALUE dev_select(VALUE self, VALUE tag)
 {
-  dev_info * dev;
-  Data_Get_Struct(self, dev_info, dev);
+  nfc_device_t * dev;
+  Data_Get_Struct(self, nfc_device_t, dev);
 
-  tag_info * ti = calloc(1, sizeof(tag_info));
+  nfc_target_info_t * ti = calloc(1, sizeof(nfc_target_info_t));
 
-  if (nfc_initiator_select_tag(dev, IM_ISO14443A_106, NULL, 0, ti) ) {
+  if (nfc_initiator_select_passive_target(dev, NM_ISO14443A_106, NULL, 0, ti) ) {
     return Data_Wrap_Struct(cNfcISO14443A, 0, free, ti);
-  }
-
-  if (nfc_initiator_select_tag(dev, IM_FELICA_212, abtFelica, 5, ti) || nfc_initiator_select_tag(dev, IM_FELICA_424, abtFelica, 5, ti)) {
-    return Data_Wrap_Struct(cNfcFelica, 0, free, ti); 
   }
 
 
@@ -87,8 +82,8 @@ static VALUE dev_select(VALUE self, VALUE tag)
  */
 static VALUE name(VALUE self)
 {
-  dev_info * dev;
-  Data_Get_Struct(self, dev_info, dev);
+  nfc_device_t * dev;
+  Data_Get_Struct(self, nfc_device_t, dev);
 
   return rb_str_new2(dev->acName);
 }
@@ -101,10 +96,10 @@ static VALUE name(VALUE self)
  */
 static VALUE dev_deselect(VALUE self)
 {
-  dev_info * dev;
-  Data_Get_Struct(self, dev_info, dev);
+  nfc_device_t * dev;
+  Data_Get_Struct(self, nfc_device_t, dev);
 
-  nfc_initiator_deselect_tag(dev);
+  nfc_initiator_deselect_target(dev);
 
   return self;
 }

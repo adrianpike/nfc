@@ -43,7 +43,7 @@ unless ["", ""] == nfc_dirs
   LIB_DIRS.unshift nfc_dirs[1]
 end
 
-unless find_header('libnfc/libnfc.h', *HEADER_DIRS)
+unless find_header('nfc/nfc.h', *HEADER_DIRS)
   abort "libnfc is missing.  please install libnfc: http://libnfc.org/"
 end
 
